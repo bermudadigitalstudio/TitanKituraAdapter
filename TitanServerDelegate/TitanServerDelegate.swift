@@ -1,5 +1,6 @@
 import TitanCore
 import KituraNet
+import Foundation
 
 public final class TitanServerDelegate: ServerDelegate {
   let app: (RequestType) -> (ResponseType)
@@ -14,7 +15,9 @@ public final class TitanServerDelegate: ServerDelegate {
 
 private extension ServerRequest {
   func toRequest() -> Request {
-    return Request(self.method, "")
+    let query = (self.urlURL.query.map { "?" + $0 } ?? "")
+    let path = (self.urlURL.path + query)
+    return Request("", path, "", headers: [])
   }
 }
 

@@ -51,7 +51,7 @@ final class TitanServerDelegateTests: XCTestCase {
 
     waitForExpectations(timeout: 10, handler: nil)
     XCTAssertNotNil(titanRequestConvertedFromKitura)
-//    XCTAssertEqual(titanRequestConvertedFromKitura.path, "/complexPath/with/comps?query=string&value=stuff")
+    XCTAssertEqual(titanRequestConvertedFromKitura.path, "/complexPath/with/comps?query=string&value=stuff")
 //    XCTAssertEqual(titanRequestConvertedFromKitura.body, "Some body goes here")
 //    XCTAssertEqual(titanRequestConvertedFromKitura.method, "PATCH")
 //    XCTAssertEqual(titanRequestConvertedFromKitura.headers.first?.0, "Accept")
