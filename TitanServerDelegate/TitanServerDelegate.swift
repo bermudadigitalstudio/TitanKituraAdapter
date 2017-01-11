@@ -17,7 +17,15 @@ private extension ServerRequest {
   func toRequest() -> Request {
     let query = (self.urlURL.query.map { "?" + $0 } ?? "")
     let path = (self.urlURL.path + query)
-    return Request("", path, "", headers: [])
+    var bodyData = Data()
+    let readCount = try? self.readAllData(into: &bodyData)
+    let body: String
+    if readCount != nil {
+      body = String(data: bodyData, encoding: .utf8) ?? ""
+    } else {
+      body = "" // Error condition – server failed to read body data from request
+    }
+    return Request("method", path, body, headers: [])
   }
 }
 
