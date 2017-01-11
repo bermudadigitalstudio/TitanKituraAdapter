@@ -42,6 +42,18 @@ extension HeadersContainer {
 private extension ResponseType {
   func write(toServerResponse response: ServerResponse) throws {
     response.statusCode = HTTPStatusCode(rawValue: code)
-    try response.end(text: body)
+    var contentLengthIsSet = false
+    for (key, value) in self.headers {
+      response.headers.append(key, value: value)
+      if key.lowercased() == "content-length" {
+        contentLengthIsSet = true
+      }
+    }
+    let data = self.body.data(using: .utf8) ?? Data()
+    if !contentLengthIsSet {
+      response.headers.append("Content-Length", value: "\(data.count)")
+    }
+    try response.write(from: data)
+    try response.end()
   }
 }

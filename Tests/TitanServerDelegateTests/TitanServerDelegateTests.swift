@@ -7,27 +7,35 @@ import Foundation
 final class TitanServerDelegateTests: XCTestCase {
 
   var titanInstance: Titan!
+  var port: UInt32!
+  var server: HTTPServer!
   override func setUp() {
+    port = arc4random_uniform(1000) + 8000
     titanInstance = Titan()
+    // Configure Kitura server
+    let serverStartedExpectation = expectation(description: "Server started")
+    let kituraServerDelegate = TitanServerDelegate(titanInstance.app)
+    server = HTTP.createServer().started {
+      serverStartedExpectation.fulfill()
+    }
+
+    try! server.listen(on: Int(port))
+
+    waitForExpectations(timeout: 1, handler: nil)
+    // Configure Titan integration
+    server.delegate = kituraServerDelegate
+  }
+
+  override func tearDown() {
+    server.stop()
+    server = nil
   }
 
   func testConvertingKituraRequestToTitanRequest() {
-    let port = arc4random_uniform(1000) + 8000
     let body = "Some body goes here"
     let length = "\(body.utf8.count)"
     let session = URLSession(configuration: .ephemeral)
 
-    // Configure Kitura server
-    let serverStartedExpectation = expectation(description: "Server started")
-    let kituraServerDelegate = TitanServerDelegate(titanInstance.app)
-    let s = HTTP.createServer().started {
-      serverStartedExpectation.fulfill()
-    }
-    try! s.listen(on: Int(port))
-    waitForExpectations(timeout: 1, handler: nil)
-
-    // Configure Titan integration
-    s.delegate = kituraServerDelegate
     let requestExp = expectation(description: "requestReceived")
     var titanRequestConvertedFromKitura: TitanCore.RequestType!
     titanInstance.middleware { (request, response) -> (TitanCore.RequestType, TitanCore.ResponseType) in
@@ -37,17 +45,13 @@ final class TitanServerDelegateTests: XCTestCase {
     }
 
     // Make the request
-    var r = URLRequest(url: URL(string: "http://localhost:\(port)/complexPath/with/comps?query=string&value=stuff")!)
+    var r = URLRequest(url: URL(string: "http://localhost:\(port!)/complexPath/with/comps?query=string&value=stuff")!)
     r.httpMethod = "PATCH"
     r.setValue("application/json", forHTTPHeaderField: "Accept")
     r.setValue(length, forHTTPHeaderField: "Content-Length")
     r.httpBody = body.data(using: .utf8)
 
-    session.dataTask(with: r) { (data, res, err) in
-      dump(data)
-      dump(res)
-      dump(err)
-    }.resume()
+    session.dataTask(with: r).resume()
 
     waitForExpectations(timeout: 10, handler: nil)
     XCTAssertNotNil(titanRequestConvertedFromKitura)
@@ -63,22 +67,33 @@ final class TitanServerDelegateTests: XCTestCase {
     }
     XCTAssertNotNil(headerPair)
   }
-//
-//  func testConvertingTitanResponseToKituraResponse() {
-//    let titanResponse = TitanCore.Response(501, "Not implemented; developer is exceedingly lazy", headers: [("Cache-Control", "private")])
-//    let KituraResponseConvertedFromTitan: Kitura.ResponseType
-//    titanInstance.middleware { (request, response) -> (TitanCore.RequestType, TitanCore.ResponseType) in
-//      return (request, titanResponse)
-//    }
-//    let app = toKituraApplication(titanInstance.app)
-//    let request = Inquiline.Request(method: "GET", path: "/")
-//    KituraResponseConvertedFromTitan = app(request)
-//    XCTAssertNotNil(KituraResponseConvertedFromTitan.body)
-//    XCTAssertTrue(KituraResponseConvertedFromTitan.statusLine.hasPrefix("501"))
-//    XCTAssertEqual(KituraResponseConvertedFromTitan.headers.count, 1)
-//    XCTAssertEqual(KituraResponseConvertedFromTitan.headers.first?.0, "Cache-Control")
-//    XCTAssertEqual(KituraResponseConvertedFromTitan.headers.first?.1, "private")
-//  }
+
+  func testConvertingTitanResponseToKituraResponse() {
+    let titanResponse = TitanCore.Response(501, "Not implemented; developer is exceedingly lazy", headers: [("Cache-Control", "private")])
+
+    titanInstance.middleware { (request, response) -> (TitanCore.RequestType, TitanCore.ResponseType) in
+      return (request, titanResponse)
+    }
+
+    let session = URLSession(configuration: .ephemeral)
+    var data: Data!, resp: HTTPURLResponse!, err: Swift.Error!
+    let x = expectation(description: "Response received")
+    session.dataTask(with: URL(string: "http://localhost:\(port!)/")!) { (d, r, e) in
+      data = d
+      resp = r as? HTTPURLResponse
+      err = e
+      x.fulfill()
+    }.resume()
+
+    waitForExpectations(timeout: 1, handler: nil)
+    XCTAssertNil(err)
+    XCTAssertNotNil(data)
+    XCTAssertNotNil(resp)
+
+    XCTAssertEqual(resp.statusCode, 501)
+    XCTAssertEqual(resp.allHeaderFields["Cache-Control"] as? String, "private")
+    XCTAssertEqual(data, "Not implemented; developer is exceedingly lazy".data(using: .utf8)!)
+  }
 
   static var allTests: [(String, (TitanServerDelegateTests) -> () throws -> Void)] {
     return [
