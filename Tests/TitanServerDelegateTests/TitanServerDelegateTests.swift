@@ -53,9 +53,15 @@ final class TitanServerDelegateTests: XCTestCase {
     XCTAssertNotNil(titanRequestConvertedFromKitura)
     XCTAssertEqual(titanRequestConvertedFromKitura.path, "/complexPath/with/comps?query=string&value=stuff")
     XCTAssertEqual(titanRequestConvertedFromKitura.body, "Some body goes here")
-//    XCTAssertEqual(titanRequestConvertedFromKitura.method, "PATCH")
-//    XCTAssertEqual(titanRequestConvertedFromKitura.headers.first?.0, "Accept")
-//    XCTAssertEqual(titanRequestConvertedFromKitura.headers.first?.1, "application/json")
+    XCTAssertEqual(titanRequestConvertedFromKitura.method, "PATCH")
+    var headerPair: Header? = nil
+    for (key, value) in titanRequestConvertedFromKitura.headers {
+      if key == "Accept" && value == "application/json" {
+        headerPair = (key, value)
+        break
+      }
+    }
+    XCTAssertNotNil(headerPair)
   }
 //
 //  func testConvertingTitanResponseToKituraResponse() {

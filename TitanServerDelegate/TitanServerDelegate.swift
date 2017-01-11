@@ -25,7 +25,17 @@ private extension ServerRequest {
     } else {
       body = "" // Error condition – server failed to read body data from request
     }
-    return Request("method", path, body, headers: [])
+    return Request(self.method, path, body, headers: self.headers.toHeadersArray())
+  }
+}
+
+extension HeadersContainer {
+  func toHeadersArray() -> [Header] {
+    let h = Array(self)
+    let headers = h.map { (k, v) in
+      return (k, v.joined(separator: ", "))
+    }
+    return headers
   }
 }
 
