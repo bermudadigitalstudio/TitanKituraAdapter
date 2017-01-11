@@ -10,7 +10,7 @@ final class TitanServerDelegateTests: XCTestCase {
   var port: UInt32!
   var server: HTTPServer!
   override func setUp() {
-    port = arc4random_uniform(1000) + 8000
+    port = 12345
     titanInstance = Titan()
     // Configure Kitura server
     let serverStartedExpectation = expectation(description: "Server started")
@@ -34,7 +34,7 @@ final class TitanServerDelegateTests: XCTestCase {
   func testConvertingKituraRequestToTitanRequest() {
     let body = "Some body goes here"
     let length = "\(body.utf8.count)"
-    let session = URLSession(configuration: .ephemeral)
+    let session = URLSession(configuration: .default)
 
     let requestExp = expectation(description: "requestReceived")
     var titanRequestConvertedFromKitura: TitanCore.RequestType!
@@ -75,7 +75,7 @@ final class TitanServerDelegateTests: XCTestCase {
       return (request, titanResponse)
     }
 
-    let session = URLSession(configuration: .ephemeral)
+    let session = URLSession(configuration: .default)
     var data: Data!, resp: HTTPURLResponse!, err: Swift.Error!
     let x = expectation(description: "Response received")
     session.dataTask(with: URL(string: "http://localhost:\(port!)/")!) { (d, r, e) in
@@ -91,13 +91,14 @@ final class TitanServerDelegateTests: XCTestCase {
     XCTAssertNotNil(resp)
 
     XCTAssertEqual(resp.statusCode, 501)
-    XCTAssertEqual(resp.allHeaderFields["Cache-Control"] as? String, "private")
+    XCTAssertEqual(resp.allHeaderFields["Cache-Control"]! as! String, "private")
     XCTAssertEqual(data, "Not implemented; developer is exceedingly lazy".data(using: .utf8)!)
   }
 
   static var allTests: [(String, (TitanServerDelegateTests) -> () throws -> Void)] {
     return [
-
+      ("testConvertingKituraRequestToTitanRequest", testConvertingKituraRequestToTitanRequest),
+      ("testConvertingTitanResponseToKituraResponse", testConvertingTitanResponseToKituraResponse)
     ]
   }
 }
