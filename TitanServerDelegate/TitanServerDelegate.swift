@@ -1,7 +1,6 @@
 import TitanCore
 import KituraNet
 
-@available(*, unavailable, message: "Incomplete implementation")
 public final class TitanServerDelegate: ServerDelegate {
   let app: (RequestType) -> (ResponseType)
   public init(_ titanApp: @escaping (RequestType) -> (ResponseType)) {
@@ -9,20 +8,18 @@ public final class TitanServerDelegate: ServerDelegate {
   }
   public func handle(request: ServerRequest, response: ServerResponse) {
     let r = self.app(request.toRequest())
-    try? r.writeToServerResponse(response)
+    try? r.write(toServerResponse: response)
   }
 }
 
-@available(*, unavailable, message: "Incomplete implementation")
-extension ServerRequest {
+private extension ServerRequest {
   func toRequest() -> Request {
     return Request(self.method, "")
   }
 }
 
-@available(*, unavailable, message: "Incomplete implementation")
-extension ResponseType {
-  func writeToServerResponse(_ response: ServerResponse) throws {
+private extension ResponseType {
+  func write(toServerResponse response: ServerResponse) throws {
     response.statusCode = HTTPStatusCode(rawValue: code)
     try response.end(text: body)
   }
