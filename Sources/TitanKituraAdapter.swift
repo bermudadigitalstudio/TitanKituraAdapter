@@ -2,6 +2,18 @@ import TitanCore
 import KituraNet
 import Foundation
 
+public func serve(_ app: @escaping (RequestType) -> (ResponseType), on port: Int) -> Never {
+  let server = HTTP.createServer()
+  server.delegate = TitanServerDelegate(app)
+  do {
+    try server.listen(on: port)
+  } catch {
+    print("Error listening on port \(port): \(error). Use server.failed(callback:) to handle")
+  }
+  ListenerGroup.waitForListeners()
+  fatalError("Done")
+}
+
 public final class TitanServerDelegate: ServerDelegate {
   let app: (RequestType) -> (ResponseType)
   public init(_ titanApp: @escaping (RequestType) -> (ResponseType)) {
