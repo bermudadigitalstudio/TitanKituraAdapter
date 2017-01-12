@@ -1,10 +1,10 @@
 import XCTest
-import TitanServerDelegate
+import TitanKituraAdapter
 import TitanCore
 import KituraNet
 import Foundation
 
-final class TitanServerDelegateTests: XCTestCase {
+final class TitanKituraAdapterTests: XCTestCase {
 
   var titanInstance: Titan!
   var port: UInt32!
@@ -95,7 +95,7 @@ final class TitanServerDelegateTests: XCTestCase {
     XCTAssertEqual(data, "Not implemented; developer is exceedingly lazy".data(using: .utf8)!)
   }
 
-  static var allTests: [(String, (TitanServerDelegateTests) -> () throws -> Void)] {
+  static var allTests: [(String, (TitanKituraAdapterTests) -> () throws -> Void)] {
     return [
       ("testConvertingKituraRequestToTitanRequest", testConvertingKituraRequestToTitanRequest),
       ("testConvertingTitanResponseToKituraResponse", testConvertingTitanResponseToKituraResponse)
