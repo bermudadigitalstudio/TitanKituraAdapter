@@ -33,5 +33,5 @@ TitanKituraAdapter.serve(TitanApp, on: 8000)
 
 ## How?
 
-Kitura's webserver interacts with an application through the [`ServerDelegate` protocol](https://github.com/IBM-Swift/Kitura-net/blob/master/Sources/KituraNet/Server/ServerDelegate.swift). `TitanKituraAdapter` implements a `TitanServerDelegate` which conforms to this protocol. The `serve` function is only a few lines long and [does pretty much the same thing]("./Sources/TitanKituraAdapter.swift") that [Kitura's main interface to starting and running servers does](https://github.com/IBM-Swift/Kitura/blob/master/Sources/Kitura/Kitura.swift#L38-L95)
+Kitura's webserver interacts with an application through the [`ServerDelegate` protocol](https://github.com/IBM-Swift/Kitura-net/blob/master/Sources/KituraNet/Server/ServerDelegate.swift). `TitanKituraAdapter` implements a `TitanServerDelegate` which conforms to this protocol. The `serve` function is only a few lines long and [does pretty much the same thing](./Sources/TitanKituraAdapter.swift) that [Kitura's main interface to starting and running servers does](https://github.com/IBM-Swift/Kitura/blob/master/Sources/Kitura/Kitura.swift#L38-L95)
 
