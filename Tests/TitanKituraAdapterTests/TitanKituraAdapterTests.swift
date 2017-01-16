@@ -38,7 +38,7 @@ final class TitanKituraAdapterTests: XCTestCase {
 
     let requestExp = expectation(description: "requestReceived")
     var titanRequestConvertedFromKitura: TitanCore.RequestType!
-    titanInstance.middleware { (request, response) -> (TitanCore.RequestType, TitanCore.ResponseType) in
+    titanInstance.addFunction { (request, response) -> (TitanCore.RequestType, TitanCore.ResponseType) in
       titanRequestConvertedFromKitura = request
       requestExp.fulfill()
       return (request, response)
@@ -71,7 +71,7 @@ final class TitanKituraAdapterTests: XCTestCase {
   func testConvertingTitanResponseToKituraResponse() {
     let titanResponse = TitanCore.Response(501, "Not implemented; developer is exceedingly lazy", headers: [("Cache-Control", "private")])
 
-    titanInstance.middleware { (request, response) -> (TitanCore.RequestType, TitanCore.ResponseType) in
+    titanInstance.addFunction { (request, response) -> (TitanCore.RequestType, TitanCore.ResponseType) in
       return (request, titanResponse)
     }
 
