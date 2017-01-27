@@ -69,7 +69,7 @@ final class TitanKituraAdapterTests: XCTestCase {
   }
 
   func testConvertingTitanResponseToKituraResponse() {
-    let titanResponse = TitanCore.Response(501, "Not implemented; developer is exceedingly lazy", headers: [("Cache-Control", "private")])
+    let titanResponse = TitanCore.Response(code: 501, body: "Not implemented; developer is exceedingly lazy", headers: [("Cache-Control", "private")])
 
     titanInstance.addFunction { (request, response) -> (TitanCore.RequestType, TitanCore.ResponseType) in
       return (request, titanResponse)

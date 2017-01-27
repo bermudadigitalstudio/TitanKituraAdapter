@@ -37,7 +37,7 @@ private extension ServerRequest {
     } else {
       body = "" // Error condition – server failed to read body data from request
     }
-    return Request(self.method, path, body, headers: self.headers.toHeadersArray())
+    return Request(method: self.method, path: path, body: body, headers: self.headers.toHeadersArray())
   }
 }
 
