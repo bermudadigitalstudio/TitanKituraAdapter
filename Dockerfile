@@ -7,6 +7,6 @@ RUN apt-get update && \
 COPY Package.swift /code/Package.swift
 WORKDIR /code
 RUN swift package fetch
-COPY ./TitanServerDelegate /code/TitanServerDelegate
+COPY ./Sources /code/Sources
 COPY ./Tests /code/Tests
 CMD swift test

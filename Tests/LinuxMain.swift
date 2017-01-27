@@ -1,6 +1,6 @@
 import XCTest
-@testable import TitanServerDelegateTests
+@testable import TitanKituraAdapterTests
 
 XCTMain([
-  testCase(TitanServerDelegateTests.allTests),
+  testCase(TitanKituraAdapterTests.allTests),
 ])
