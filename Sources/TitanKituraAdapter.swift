@@ -12,6 +12,7 @@ public struct HTTPMetric {
     public let responseStatusCode: Int
     public let requestUrl: String
     public let requestMethod: String
+    public let requestRemoteAddress: String
 }
 
 public func serve(_ app: @escaping (RequestType) -> (ResponseType),
@@ -58,7 +59,8 @@ public final class TitanServerDelegate: ServerDelegate {
                                             duration: end - start,
                                             responseStatusCode: statusCode,
                                             requestUrl: request.urlURL.absoluteString,
-                                            requestMethod: request.method))
+                                            requestMethod: request.method,
+                                            requestRemoteAddress: request.remoteAddress))
         }
     }
 }
