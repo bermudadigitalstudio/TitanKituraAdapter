@@ -77,7 +77,7 @@ private extension ServerRequest {
         } else {
             body = "" // Error condition – server failed to read body data from request
         }
-        return Request(method: self.method, path: path, body: body, headers: self.headers.toHeadersArray())
+        return Request(method: self.method, path: path, body: body, bodyData: bodyData, headers: self.headers.toHeadersArray())
     }
 }
 
@@ -101,7 +101,7 @@ private extension ResponseType {
                 contentLengthIsSet = true
             }
         }
-        let data = self.body.data(using: .utf8) ?? Data()
+        let data = self.body
         if !contentLengthIsSet {
             response.headers.append("Content-Length", value: "\(data.count)")
         }

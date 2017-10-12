@@ -80,8 +80,8 @@ final class TitanKituraAdapterTests: XCTestCase {
         XCTAssertNotNil(headerPair)
     }
 
-    func testConvertingTitanResponseToKituraResponse() {
-        let titanResponse = TitanCore.Response(code: 501, body: "Not implemented; developer is exceedingly lazy",
+    func testConvertingTitanResponseToKituraResponse() throws {
+        let titanResponse = try TitanCore.Response(code: 501, body: "Not implemented; developer is exceedingly lazy",
                                                headers: [("Cache-Control", "private")])
 
         titanInstance.addFunction { (request, _) -> (TitanCore.RequestType, TitanCore.ResponseType) in
