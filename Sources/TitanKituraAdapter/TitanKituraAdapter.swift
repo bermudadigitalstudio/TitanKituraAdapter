@@ -49,6 +49,7 @@ public final class TitanServerDelegate: ServerDelegate {
 
     public func handle(request: ServerRequest, response: ServerResponse) {
         let start = Date().timeIntervalSince1970
+
         let r = self.app(request.toRequest())
         try? r.write(toServerResponse: response)
         let end = Date().timeIntervalSince1970
@@ -69,15 +70,9 @@ private extension ServerRequest {
     func toRequest() -> Request {
         let query = (self.urlURL.query.map { "?" + $0 } ?? "")
         let path = (self.urlURL.path + query)
-        var bodyData = Data()
-        let readCount = try? self.readAllData(into: &bodyData)
-        let body: String
-        if readCount != nil {
-            body = String(data: bodyData, encoding: .utf8) ?? ""
-        } else {
-            body = "" // Error condition – server failed to read body data from request
-        }
-        return Request(method: self.method, path: path, body: body, bodyData: bodyData, headers: self.headers.toHeadersArray())
+        var body = Data()
+        _ = try? self.readAllData(into: &body)
+        return Request(method: self.method, path: path, body: body, headers: self.headers.toHeadersArray())
     }
 }
 
@@ -92,20 +87,28 @@ extension HeadersContainer {
 }
 
 private extension ResponseType {
+
     func write(toServerResponse response: ServerResponse) throws {
+
+        // HTTP Status
         response.statusCode = HTTPStatusCode(rawValue: code)
+
+        // HTTP Headers
         var contentLengthIsSet = false
+
         for (key, value) in self.headers {
             response.headers.append(key, value: value)
             if key.lowercased() == "content-length" {
                 contentLengthIsSet = true
             }
         }
-        let data = self.body
+
         if !contentLengthIsSet {
-            response.headers.append("Content-Length", value: "\(data.count)")
+            response.headers.append("Content-Length", value: "\(self.body.count)")
         }
-        try response.write(from: data)
+
+        // HTTP Body
+        try response.write(from: self.body)
         try response.end()
     }
 }

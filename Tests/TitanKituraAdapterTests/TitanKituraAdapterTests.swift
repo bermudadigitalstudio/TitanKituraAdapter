@@ -16,7 +16,7 @@ final class TitanKituraAdapterTests: XCTestCase {
         // Configure Kitura server
         let serverStartedExpectation = expectation(description: "Server started")
         let kituraServerDelegate = TitanServerDelegate(titanInstance.app, metrics: { httpMetric in
-            XCTAssertNotNil(httpMetric)            
+            XCTAssertNotNil(httpMetric)
         })
         server = HTTP.createServer().started {
             serverStartedExpectation.fulfill()
@@ -68,7 +68,7 @@ final class TitanKituraAdapterTests: XCTestCase {
         waitForExpectations(timeout: 10, handler: nil)
         XCTAssertNotNil(titanRequestConvertedFromKitura)
         XCTAssertEqual(titanRequestConvertedFromKitura.path, "/complexPath/with/comps?query=string&value=stuff")
-        XCTAssertEqual(titanRequestConvertedFromKitura.body, "Some body goes here")
+        XCTAssertEqual(titanRequestConvertedFromKitura.bodyString, "Some body goes here")
         XCTAssertEqual(titanRequestConvertedFromKitura.method, "PATCH")
         var headerPair: Header? = nil
         for (key, value) in titanRequestConvertedFromKitura.headers {
@@ -107,8 +107,6 @@ final class TitanKituraAdapterTests: XCTestCase {
         XCTAssertEqual(resp.allHeaderFields["Cache-Control"] as? String, "private")
         XCTAssertEqual(data, "Not implemented; developer is exceedingly lazy".data(using: .utf8)!)
     }
-
-
 
     static var allTests: [(String, (TitanKituraAdapterTests) -> () throws -> Void)] {
         return [
