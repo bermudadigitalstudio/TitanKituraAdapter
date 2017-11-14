@@ -1,8 +1,8 @@
-FROM swift:3.1
+FROM swift:4
 
-COPY Package.swift /code/Package.swift
+COPY Package@swift-4.0.swift /code/Package.swift
 WORKDIR /code
-RUN swift package fetch
+RUN swift package resolve
 COPY ./Sources /code/Sources
 COPY ./Tests /code/Tests
 CMD swift test

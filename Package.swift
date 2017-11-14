@@ -1,11 +1,18 @@
-// swift-tools-version:3.1
+// swift-tools-version:4.0
 
 import PackageDescription
 
-var package = Package(
-  name: "TitanKituraAdapter",
-  dependencies: [
-    .Package(url: "https://github.com/bermudadigitalstudio/TitanCore.git", majorVersion: 0, minor: 3),
-    .Package(url: "https://github.com/IBM-Swift/Kitura-net.git", majorVersion: 1, minor: 7)
-  ]
+let package = Package(
+    name: "TitanKituraAdapter",
+    products: [
+        .library(name: "TitanKituraAdapter", targets: ["TitanKituraAdapter"])
+    ],
+    dependencies: [
+        .package(url: "https://github.com/bermudadigitalstudio/Titan.git", .branch("swift4")),
+        .package(url: "https://github.com/IBM-Swift/Kitura-net.git", from: "1.7.0")
+    ],
+    targets: [
+        .target(name:"TitanKituraAdapter", dependencies: ["TitanCore", "KituraNet"]),
+        .testTarget(name: "TitanKituraAdapterTests", dependencies: ["TitanKituraAdapter"])
+    ]
 )
