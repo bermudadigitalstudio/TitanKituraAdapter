@@ -8,7 +8,7 @@ let package = Package(
         .library(name: "TitanKituraAdapter", targets: ["TitanKituraAdapter"])
     ],
     dependencies: [
-        .package(url: "https://github.com/bermudadigitalstudio/Titan.git", .branch("swift4")),
+        .package(url: "https://github.com/bermudadigitalstudio/Titan.git", from: "0.8.0"),
         .package(url: "https://github.com/IBM-Swift/Kitura-net.git", from: "1.7.0")
     ],
     targets: [
