@@ -15,11 +15,11 @@ public struct HTTPMetric {
     public let requestRemoteAddress: String
 }
 
-public func serve(_ app: @escaping (RequestType) -> (ResponseType),
-                  on port: Int, metrics: MetricHandler? = nil) -> Never {
+public func serve(_ app: @escaping (RequestType, ResponseType) -> (RequestType, ResponseType),
+                  on port: Int, defaultResponse: ResponseType = Response(code: 404, body: Data(), headers: []), metrics: MetricHandler? = nil) -> Never {
 
     let server = HTTP.createServer()
-    server.delegate = TitanServerDelegate(app, metrics: metrics)
+    server.delegate = TitanServerDelegate(app, defaultResponse: defaultResponse, metrics: metrics)
 
     do {
         try server.listen(on: port)
@@ -33,12 +33,14 @@ public func serve(_ app: @escaping (RequestType) -> (ResponseType),
 
 public final class TitanServerDelegate: ServerDelegate {
 
-    let app: (RequestType) -> (ResponseType)
+    let defaultResponse: ResponseType
+    let app: (RequestType, ResponseType) -> (RequestType, ResponseType)
     let metricQueue: DispatchQueue?
     let metricHandler: MetricHandler?
 
-    public init(_ titanApp: @escaping (RequestType) -> (ResponseType), metrics: MetricHandler?) {
+    public init(_ titanApp: @escaping (RequestType, ResponseType) -> (RequestType, ResponseType), defaultResponse: ResponseType, metrics: MetricHandler?) {
         self.app = titanApp
+        self.defaultResponse = defaultResponse
         self.metricHandler = metrics
         if metricHandler != nil {
             metricQueue = DispatchQueue(label: "titan.metrics")
@@ -50,8 +52,8 @@ public final class TitanServerDelegate: ServerDelegate {
     public func handle(request: ServerRequest, response: ServerResponse) {
         let start = Date().timeIntervalSince1970
 
-        let r = self.app(request.toRequest())
-        try? r.write(toServerResponse: response)
+        let r = self.app(request.toRequest(), defaultResponse)
+        try? r.1.write(toServerResponse: response)
         let end = Date().timeIntervalSince1970
         metricQueue?.async {
             let statusCode = response.statusCode?.rawValue ?? -1
