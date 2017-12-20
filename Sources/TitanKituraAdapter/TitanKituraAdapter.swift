@@ -16,7 +16,7 @@ public struct HTTPMetric {
 }
 
 public func serve(_ app: @escaping (RequestType, ResponseType) -> (RequestType, ResponseType),
-                  on port: Int, defaultResponse: ResponseType = Response(code: 404, body: Data(), headers: []), metrics: MetricHandler? = nil) -> Never {
+                  on port: Int, defaultResponse: ResponseType = Response(code: 404, body: nil), metrics: MetricHandler? = nil) -> Never {
 
     let server = HTTP.createServer()
     server.delegate = TitanServerDelegate(app, defaultResponse: defaultResponse, metrics: metrics)
@@ -38,7 +38,9 @@ public final class TitanServerDelegate: ServerDelegate {
     let metricQueue: DispatchQueue?
     let metricHandler: MetricHandler?
 
-    public init(_ titanApp: @escaping (RequestType, ResponseType) -> (RequestType, ResponseType), defaultResponse: ResponseType, metrics: MetricHandler?) {
+    public init(_ titanApp: @escaping (RequestType, ResponseType) -> (RequestType, ResponseType),
+                defaultResponse: ResponseType, metrics: MetricHandler?) {
+
         self.app = titanApp
         self.defaultResponse = defaultResponse
         self.metricHandler = metrics
@@ -74,17 +76,20 @@ private extension ServerRequest {
         let path = (self.urlURL.path + query)
         var body = Data()
         _ = try? self.readAllData(into: &body)
-        return Request(method: self.method, path: path, body: body, headers: self.headers.toHeadersArray())
+        return Request(method: self.method, path: path, body: body, headers: self.headers.toHTTPHeaders())
     }
 }
 
 extension HeadersContainer {
-    func toHeadersArray() -> [Header] {
-        let h = Array(self)
-        let headers = h.map { (k, v) in
-            return (k, v.joined(separator: ", "))
+    func toHTTPHeaders() -> HTTPHeaders {
+
+        var httpHeaders = HTTPHeaders()
+
+        for (key, value) in self {
+            httpHeaders[key] = value.joined(separator: ", ")
         }
-        return headers
+
+        return httpHeaders
     }
 }
 

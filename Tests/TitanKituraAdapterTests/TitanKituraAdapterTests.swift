@@ -15,7 +15,7 @@ final class TitanKituraAdapterTests: XCTestCase {
         titanInstance = Titan()
         // Configure Kitura server
         let serverStartedExpectation = expectation(description: "Server started")
-        let kituraServerDelegate = TitanServerDelegate(titanInstance.app, defaultResponse: Response(code: 404, body: Data(), headers: []), metrics: { httpMetric in
+        let kituraServerDelegate = TitanServerDelegate(titanInstance.app, defaultResponse: Response(code: 404, body: nil), metrics: { httpMetric in
             XCTAssertNotNil(httpMetric)
         })
         server = HTTP.createServer().started {
@@ -70,19 +70,13 @@ final class TitanKituraAdapterTests: XCTestCase {
         XCTAssertEqual(titanRequestConvertedFromKitura.path, "/complexPath/with/comps?query=string&value=stuff")
         XCTAssertEqual(titanRequestConvertedFromKitura.body, "Some body goes here")
         XCTAssertEqual(titanRequestConvertedFromKitura.method, "PATCH")
-        var headerPair: Header? = nil
-        for (key, value) in titanRequestConvertedFromKitura.headers {
-            if key == "Accept" && value == "application/json" {
-                headerPair = (key, value)
-                break
-            }
-        }
-        XCTAssertNotNil(headerPair)
+        XCTAssertEqual(titanRequestConvertedFromKitura.headers["Accept"], "application/json")
+        XCTAssertEqual(titanRequestConvertedFromKitura.headers["Content-Length"], "\(length)")
     }
 
     func testConvertingTitanResponseToKituraResponse() throws {
         let titanResponse = try TitanCore.Response(code: 501, body: "Not implemented; developer is exceedingly lazy",
-                                               headers: [("Cache-Control", "private")])
+                                                   headers: HTTPHeaders(dictionaryLiteral: ("Cache-Control", "private")))
 
         titanInstance.addFunction { (request, _) -> (TitanCore.RequestType, TitanCore.ResponseType) in
             return (request, titanResponse)
@@ -91,10 +85,10 @@ final class TitanKituraAdapterTests: XCTestCase {
         let session = URLSession(configuration: .default)
         var data: Data!, resp: HTTPURLResponse!, err: Swift.Error!
         let x = expectation(description: "Response received")
-        session.dataTask(with: URL(string: "http://localhost:\(port)/")!) { (d, r, e) in
-            data = d
-            resp = r as? HTTPURLResponse
-            err = e
+        session.dataTask(with: URL(string: "http://localhost:\(port)/")!) { (respdata, response, error) in
+            data = respdata
+            resp = response as? HTTPURLResponse
+            err = error
             x.fulfill()
             }.resume()
 
@@ -112,10 +106,10 @@ final class TitanKituraAdapterTests: XCTestCase {
         let session = URLSession(configuration: .default)
         var data: Data!, resp: HTTPURLResponse!, err: Swift.Error!
         let x = expectation(description: "Response received")
-        session.dataTask(with: URL(string: "http://localhost:\(port)/HelloNotFound")!) { (d, r, e) in
-            data = d
-            resp = r as? HTTPURLResponse
-            err = e
+        session.dataTask(with: URL(string: "http://localhost:\(port)/HelloNotFound")!) { (respdata, response, error) in
+            data = respdata
+            resp = response as? HTTPURLResponse
+            err = error
             x.fulfill()
             }.resume()
 
