@@ -5,7 +5,7 @@ import Dispatch
 
 public typealias MetricHandler = (HTTPMetric) -> Void
 
-public struct HTTPMetric {
+public struct HTTPMetric: Codable {
     public let startAt: Double
     public let endAt: Double
     public let duration: Double
@@ -13,6 +13,7 @@ public struct HTTPMetric {
     public let requestUrl: String
     public let requestMethod: String
     public let requestRemoteAddress: String
+    public let requestHeader: [String: String]
 }
 
 public func serve(_ app: @escaping (RequestType, ResponseType) -> (RequestType, ResponseType),
@@ -65,7 +66,8 @@ public final class TitanServerDelegate: ServerDelegate {
                                             responseStatusCode: statusCode,
                                             requestUrl: request.urlURL.absoluteString,
                                             requestMethod: request.method,
-                                            requestRemoteAddress: request.remoteAddress))
+                                            requestRemoteAddress: request.remoteAddress,
+                                            requestHeader: request.headers.toDictionary()))
         }
     }
 }
@@ -90,6 +92,15 @@ extension HeadersContainer {
         }
 
         return httpHeaders
+    }
+
+    func toDictionary() -> [String: String] {
+        var dictionary = [String: String]()
+        for (key, value) in self {
+            dictionary[key] = value.joined(separator: ", ")
+        }
+
+        return dictionary
     }
 }
 
