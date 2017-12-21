@@ -78,7 +78,10 @@ private extension ServerRequest {
         let path = (self.urlURL.path + query)
         var body = Data()
         _ = try? self.readAllData(into: &body)
-        return Request(method: self.method, path: path, body: body, headers: self.headers.toHTTPHeaders())
+
+        let httpMethod = HTTPMethod(rawValue: self.method) ?? .custom(named: self.method)
+
+        return Request(method: httpMethod, path: path, body: body, headers: self.headers.toHTTPHeaders())
     }
 }
 
@@ -128,5 +131,56 @@ private extension ResponseType {
         // HTTP Body
         try response.write(from: self.body)
         try response.end()
+    }
+}
+
+extension HTTPMethod: RawRepresentable {
+
+    public typealias RawValue = String
+
+    public init?(rawValue: String) {
+        switch rawValue.lowercased() {
+        case "get":
+            self = .get
+        case "head":
+            self = .head
+        case "put":
+            self = .put
+        case "post":
+            self = .post
+        case "patch":
+            self = .patch
+        case "delete":
+            self = .delete
+        case "trace":
+            self = .trace
+        case "options":
+            self = .options
+        default :
+            self = .custom(named: rawValue)
+        }
+    }
+
+    public var rawValue: String {
+        switch self {
+        case .get:
+            return "get"
+        case .head:
+            return "head"
+        case .put:
+            return "put"
+        case .post:
+            return "post"
+        case .patch:
+            return "patch"
+        case .delete:
+            return "delete"
+        case .trace:
+            return "trace"
+        case .options:
+            return "options"
+        case .custom(let named):
+            return named
+        }
     }
 }
