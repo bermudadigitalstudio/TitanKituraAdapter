@@ -69,7 +69,7 @@ final class TitanKituraAdapterTests: XCTestCase {
         XCTAssertNotNil(titanRequestConvertedFromKitura)
         XCTAssertEqual(titanRequestConvertedFromKitura.path, "/complexPath/with/comps?query=string&value=stuff")
         XCTAssertEqual(titanRequestConvertedFromKitura.body, "Some body goes here")
-        XCTAssertEqual(titanRequestConvertedFromKitura.method, "PATCH")
+        XCTAssertEqual(titanRequestConvertedFromKitura.method, .patch)
         XCTAssertEqual(titanRequestConvertedFromKitura.headers["Accept"], "application/json")
         XCTAssertEqual(titanRequestConvertedFromKitura.headers["Content-Length"], "\(length)")
     }
