@@ -8,7 +8,7 @@ public typealias MetricHandler = (HTTPMetric) -> Void
 public struct HTTPMetric: Codable {
     public let startAt: UInt64
     public let endAt: UInt64
-    public let duration: UInt64
+    public let duration: Double
     public let responseStatusCode: Int
     public let requestUrl: String
     public let requestMethod: String
@@ -62,7 +62,7 @@ public final class TitanServerDelegate: ServerDelegate {
             let statusCode = response.statusCode?.rawValue ?? -1
             self.metricHandler?( HTTPMetric(startAt: UInt64(start),
                                             endAt: UInt64(end),
-                                            duration: UInt64((end - start) * 1_000),
+                                            duration: (end - start),
                                             responseStatusCode: statusCode,
                                             requestUrl: request.urlURL.absoluteString,
                                             requestMethod: request.method,
