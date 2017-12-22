@@ -50,42 +50,56 @@ public final class TitanServerDelegate {
 extension TitanServerDelegate: ServerDelegate {
     public func handle(request: ServerRequest, response: ServerResponse) {
 
-        let start = Date().timeIntervalSince1970
+        if metricQueue != nil {
+            let start = Date().timeIntervalSince1970
+            let headers = request.headers
 
-        let result = self.app(request.toRequest(), defaultResponse)
-        try? result.response.write(toServerResponse: response)
+            processRequest(request: request, response: response)
 
-        let end = Date().timeIntervalSince1970
+            let end = Date().timeIntervalSince1970
 
-        metricQueue?.async {
-            let statusCode = response.statusCode?.rawValue ?? -1
-            self.metricHandler?( HTTPMetric(startAt: UInt64(start),
-                                            endAt: UInt64(end),
-                                            duration: (end - start),
-                                            responseStatusCode: statusCode,
-                                            requestUrl: request.urlURL.absoluteString,
-                                            requestMethod: request.method,
-                                            requestRemoteAddress: request.remoteAddress,
-                                            requestHeader: request.headers.toDictionary()))
+            metricQueue?.async {
+                let statusCode = response.statusCode?.rawValue ?? -1
+                self.metricHandler?( HTTPMetric(startAt: UInt64(start),
+                                                endAt: UInt64(end),
+                                                duration: (end - start),
+                                                responseStatusCode: statusCode,
+                                                requestUrl: request.urlURL.absoluteString,
+                                                requestMethod: request.method,
+                                                requestRemoteAddress: request.remoteAddress,
+                                                requestHeader: headers.toDictionary()))
+            }
+        } else {
+            processRequest(request: request, response: response)
         }
+
+    }
+
+    private func processRequest(request: ServerRequest, response: ServerResponse) {
+        let result = self.app(request.toTitanRequest(), defaultResponse)
+        try? result.response.write(toServerResponse: response)
     }
 }
 
 private extension ServerRequest {
-    func toRequest() -> Request {
+
+    func toTitanRequest() -> Request {
+
         let query = (self.urlURL.query.map { "?" + $0 } ?? "")
         let path = (self.urlURL.path + query)
+
         var body = Data()
         _ = try? self.readAllData(into: &body)
 
         let httpMethod = HTTPMethod(rawValue: self.method) ?? .custom(named: self.method)
 
-        return Request(method: httpMethod, path: path, body: body, headers: self.headers.toHTTPHeaders())
+        return Request(method: httpMethod, path: path, body: body, headers: self.headers.toTitanHTTPHeaders())
     }
 }
 
 extension HeadersContainer {
-    func toHTTPHeaders() -> HTTPHeaders {
+
+    func toTitanHTTPHeaders() -> HTTPHeaders {
 
         var httpHeaders = HTTPHeaders()
 
