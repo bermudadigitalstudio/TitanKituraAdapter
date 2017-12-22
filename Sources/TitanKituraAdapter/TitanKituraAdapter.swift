@@ -3,21 +3,15 @@ import KituraNet
 import Foundation
 import Dispatch
 
-public typealias MetricHandler = (HTTPMetric) -> Void
-
-public struct HTTPMetric: Codable {
-    public let startAt: UInt64
-    public let endAt: UInt64
-    public let duration: Double
-    public let responseStatusCode: Int
-    public let requestUrl: String
-    public let requestMethod: String
-    public let requestRemoteAddress: String
-    public let requestHeader: [String: String]
-}
-
-public func serve(_ app: @escaping (RequestType, ResponseType) -> (RequestType, ResponseType),
-                  on port: Int, defaultResponse: ResponseType = Response(code: 404, body: nil), metrics: MetricHandler? = nil) -> Never {
+/// Creates and start an HTTP server.
+///
+/// - parameters:
+///   - app: The Titan function
+///   - on: HTTP port to
+///   - defaultResponse: The default Reponse if any route are found. HTTP 405 by default
+///   - metrics: Metric Handler to collect Request/Response metrics.
+public func serve(_ app: @escaping TitanFunc, on port: Int, defaultResponse: ResponseType = Response(code: 405, body: nil),
+                  metrics: MetricHandler? = nil) -> Never {
 
     let server = HTTP.createServer()
     server.delegate = TitanServerDelegate(app, defaultResponse: defaultResponse, metrics: metrics)
@@ -32,15 +26,14 @@ public func serve(_ app: @escaping (RequestType, ResponseType) -> (RequestType, 
     fatalError("Done")
 }
 
-public final class TitanServerDelegate: ServerDelegate {
+public final class TitanServerDelegate {
 
     let defaultResponse: ResponseType
-    let app: (RequestType, ResponseType) -> (RequestType, ResponseType)
+    let app: TitanFunc
     let metricQueue: DispatchQueue?
     let metricHandler: MetricHandler?
 
-    public init(_ titanApp: @escaping (RequestType, ResponseType) -> (RequestType, ResponseType),
-                defaultResponse: ResponseType, metrics: MetricHandler?) {
+    public init(_ titanApp: @escaping TitanFunc, defaultResponse: ResponseType, metrics: MetricHandler?) {
 
         self.app = titanApp
         self.defaultResponse = defaultResponse
@@ -52,12 +45,18 @@ public final class TitanServerDelegate: ServerDelegate {
         }
     }
 
+}
+
+extension TitanServerDelegate: ServerDelegate {
     public func handle(request: ServerRequest, response: ServerResponse) {
+
         let start = Date().timeIntervalSince1970
 
-        let r = self.app(request.toRequest(), defaultResponse)
-        try? r.1.write(toServerResponse: response)
+        let result = self.app(request.toRequest(), defaultResponse)
+        try? result.response.write(toServerResponse: response)
+
         let end = Date().timeIntervalSince1970
+
         metricQueue?.async {
             let statusCode = response.statusCode?.rawValue ?? -1
             self.metricHandler?( HTTPMetric(startAt: UInt64(start),
@@ -131,56 +130,5 @@ private extension ResponseType {
         // HTTP Body
         try response.write(from: self.body)
         try response.end()
-    }
-}
-
-extension HTTPMethod: RawRepresentable {
-
-    public typealias RawValue = String
-
-    public init?(rawValue: String) {
-        switch rawValue.lowercased() {
-        case "get":
-            self = .get
-        case "head":
-            self = .head
-        case "put":
-            self = .put
-        case "post":
-            self = .post
-        case "patch":
-            self = .patch
-        case "delete":
-            self = .delete
-        case "trace":
-            self = .trace
-        case "options":
-            self = .options
-        default :
-            self = .custom(named: rawValue)
-        }
-    }
-
-    public var rawValue: String {
-        switch self {
-        case .get:
-            return "get"
-        case .head:
-            return "head"
-        case .put:
-            return "put"
-        case .post:
-            return "post"
-        case .patch:
-            return "patch"
-        case .delete:
-            return "delete"
-        case .trace:
-            return "trace"
-        case .options:
-            return "options"
-        case .custom(let named):
-            return named
-        }
     }
 }
