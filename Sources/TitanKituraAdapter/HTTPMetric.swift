@@ -11,4 +11,5 @@ public struct HTTPMetric: Codable {
     public let requestMethod: String
     public let requestRemoteAddress: String
     public let requestHeader: [String: String]
+    public let traceId: String
 }

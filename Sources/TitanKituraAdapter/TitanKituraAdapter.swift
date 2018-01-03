@@ -26,6 +26,8 @@ public func serve(_ app: @escaping TitanFunc, on port: Int, defaultResponse: Res
     fatalError("Done")
 }
 
+private let traceIdHeaderName = "X-B3-TraceId"
+
 public final class TitanServerDelegate {
 
     let defaultResponse: ResponseType
@@ -52,7 +54,18 @@ extension TitanServerDelegate: ServerDelegate {
 
         if metricQueue != nil {
             let start = Date().timeIntervalSince1970
+            
             let headers = request.headers
+
+            var traceId: String
+
+            if let b3TraceId = headers[traceIdHeaderName]?.first {
+                traceId = b3TraceId
+                response.headers.append(traceIdHeaderName, value: b3TraceId)
+            } else {
+                traceId =  UUID().uuidString
+                response.headers.append(traceIdHeaderName, value: traceId)
+            }
 
             processRequest(request: request, response: response)
 
@@ -67,7 +80,8 @@ extension TitanServerDelegate: ServerDelegate {
                                                 requestUrl: request.urlURL.absoluteString,
                                                 requestMethod: request.method,
                                                 requestRemoteAddress: request.remoteAddress,
-                                                requestHeader: headers.toDictionary()))
+                                                requestHeader: headers.toDictionary(),
+                                                traceId: traceId))
             }
         } else {
             processRequest(request: request, response: response)

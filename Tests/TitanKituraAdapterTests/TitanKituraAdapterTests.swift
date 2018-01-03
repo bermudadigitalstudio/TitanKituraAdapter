@@ -85,7 +85,11 @@ final class TitanKituraAdapterTests: XCTestCase {
         let session = URLSession(configuration: .default)
         var data: Data!, resp: HTTPURLResponse!, err: Swift.Error!
         let x = expectation(description: "Response received")
-        session.dataTask(with: URL(string: "http://localhost:\(port)/")!) { (respdata, response, error) in
+        let url = URL(string: "http://localhost:\(port)/")!
+        var request = URLRequest(url: url)
+        request.addValue("42", forHTTPHeaderField: "X-B3-Traceid")
+
+        session.dataTask(with: request) { (respdata, response, error) in
             data = respdata
             resp = response as? HTTPURLResponse
             err = error
@@ -100,6 +104,9 @@ final class TitanKituraAdapterTests: XCTestCase {
         XCTAssertEqual(resp.statusCode, 501)
         XCTAssertEqual(resp.allHeaderFields["Cache-Control"] as? String, "private")
         XCTAssertEqual(data, "Not implemented; developer is exceedingly lazy".data(using: .utf8)!)
+        XCTAssertNotNil(resp.allHeaderFields["X-B3-TraceId"] as? String)
+        XCTAssertEqual(resp.allHeaderFields["X-B3-TraceId"] as? String, "42")
+
     }
 
     func testDefaultResponse() {
@@ -117,6 +124,8 @@ final class TitanKituraAdapterTests: XCTestCase {
         XCTAssertNil(err)
         XCTAssertNotNil(data)
         XCTAssertNotNil(resp)
+        XCTAssertNotNil(resp.allHeaderFields["X-B3-TraceId"] as? String)
+
 
         XCTAssertEqual(resp.statusCode, 404)
     }
